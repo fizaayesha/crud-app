@@ -13,6 +13,7 @@ const NoteSchema = require("../models/Notes");
 //   }
 // });
 
+// Create a new note
 router.post("/api/notes", async (req, res) => {
   try {
     console.log("req.user:", req.user);
@@ -31,6 +32,7 @@ router.post("/api/notes", async (req, res) => {
   }
 });
 
+// Get all notes for the authenticated user
 router.get("/api/notes", async (req, res) => {
   try {
     const getNotes = await NoteSchema.find({ owner: req.user.id });
@@ -40,6 +42,7 @@ router.get("/api/notes", async (req, res) => {
   }
 });
 
+// Get a specific note by ID
 router.get("/api/notes/:id", async (req, res) => {
   try {
     const _id = req.params.id;
@@ -50,6 +53,7 @@ router.get("/api/notes/:id", async (req, res) => {
   }
 });
 
+// Update a note by ID
 router.put("/api/notes/:id", async (req, res) => {
   try {
     const _id = req.params.id;
@@ -60,6 +64,7 @@ router.put("/api/notes/:id", async (req, res) => {
   }
 });
 
+// Delete a note by ID
 router.delete("/api/notes/:id", async (req, res) => {
   try {
     const getNote = await NoteSchema.findByIdAndDelete(req.params.id);

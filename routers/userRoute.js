@@ -6,6 +6,7 @@ const router = new express.Router();
 const UserSchema = require("../models/Users");
 require("dotenv").config();
 
+// Route for user registration
 router.post("/auth/signup", (req, res, next) => {
   bcrypt.hash(req.body.password, 10, (err, hash) => {
     if (err) {
@@ -33,6 +34,7 @@ router.post("/auth/signup", (req, res, next) => {
   });
 });
 
+// Route for user login
 router.post("/auth/login", async (req, res, next) => {
   UserSchema.find({ username: req.body.username })
     .exec()
