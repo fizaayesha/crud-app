@@ -32,7 +32,7 @@ The Notes App is a Node.js application using Express and MongoDB for user authen
 
    ```bash
    npm install
-4. **Create a .env file and add the necessary environment variables:**
+4. **Create a folder named "config," and inside it, establish a .env file containing the required environment variables.**
 
    ```bash
    MONGODB_URI=your_mongodb_uri 
