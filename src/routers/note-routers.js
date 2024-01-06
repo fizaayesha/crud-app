@@ -9,6 +9,7 @@ router.post("/notes", auth, async (req, res) => {
   const note = new Note({
     ...req.body,
     owner: req.user._id,
+    sharedWith: req.body.sharedWith,
   });
   try {
     await note.save();
@@ -53,6 +54,25 @@ router.delete("/notes/:id", auth, async (req, res) => {
     res.send({ message: "Note was deleted" });
   } catch (e) {
     res.status(500).send();
+  }
+});
+
+// Share a note with another user for the authenticated user
+router.post("/notes/:id/share", auth, async (req, res) => {
+  try {
+    const { sharedUserId } = req.body;
+
+    const sharedNote = await Note.findOneAndUpdate(
+      { _id: req.params.id, owner: req.user.id },
+      { $addToSet: { sharedWith: sharedUserId } },
+      { new: true }
+    );
+
+    if (!sharedNote) return res.status(404).json({ message: "Note not found" });
+
+    res.json({ message: "Note shared successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
