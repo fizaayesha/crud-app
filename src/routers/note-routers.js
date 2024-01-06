@@ -56,25 +56,23 @@ router.delete("/notes/:id", auth, async (req, res) => {
   }
 });
 
-router.get("/notes/search", auth, async (req, res) => {
+router.get("/notes/search/:key", auth, async (req, res) => {
+  console.log(req.params.key);
   try {
-    const search = req.query.search; // Use req.query instead of req.body for GET requests
-    const pro_data = await Note.find({
-      name: { $regex: ".*" + search + ".*", $options: "i" },
+    let data = await Note.find({
+      $or: [
+        {
+          title: { $regex: req.params.key },
+        },
+        {
+          content: { $regex: req.params.key },
+        },
+      ],
     });
-    console.log("es");
-    if (pro_data.length > 0) {
-      res
-        .status(200)
-        .send({ success: true, msg: "Searched Items Found", data: pro_data });
-      console.error("jkhjj"); // Log the error for debugging
-    } else {
-      res.status(200).send({ success: true, msg: "Searched Items Not Found!" });
-      console.log("fs");
-    }
+    console.log(data);
+    res.status(200).send(data);
   } catch (e) {
-    console.error(e); // Log the error for debugging
-    res.status(500).send({ success: false, msg: "Internal Server Error" });
+    res.status(500).send();
   }
 });
 
