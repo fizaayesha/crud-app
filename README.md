@@ -43,6 +43,8 @@ The Notes App is a Node.js application using Express and MongoDB for user authen
 
    ```bash
    npm start
+#### Visit http://localhost:8000 in your browser or use a tool like Postman to interact with the API.
+
 ## API Endpoints
 * `POST /users`: Register a new user.
 * `POST /users/login`: Log in and get a JWT.
@@ -52,7 +54,7 @@ The Notes App is a Node.js application using Express and MongoDB for user authen
 * `PUT /notes/:id`: Update a note by ID.
 * `DELETE /notes/:id`: Delete a note by ID.
 * `POST /notes/:id/share`: Share a note with another user.
-* `GET /search?q=query`: Search for notes based on keywords.
+* `GET /search/:key`: Search for notes based on keywords.
 ## Authentication
 
 **For authentication, JWTs are used. Include the JWT token in the Authorization header for protected routes.**
