@@ -1,78 +1,65 @@
 const express = require("express");
-const router = new express.Router();
-const NoteSchema = require("../models/Notes");
+const auth = require("../middleware");
+const NoteSchema = require("../models/Notes.js");
 
-// router.post("/api/notes", async (req, res) => {
-//   try {
-//     const addingNotes = new NoteSchema(req.body);
-//     console.log(req.body);
-//     const insertNotes = await addingNotes.save();
-//     res.send(insertNotes);
-//   } catch (e) {
-//     res.status(400).send(e);
-//   }
-// });
 
-// Create a new note
-router.post("/api/notes", async (req, res) => {
-  try {
-    console.log("req.user:", req.user);
-    const { title, content } = req.body;
-    const newNote = new NoteSchema({
-      title,
-      content,
-      owner: req.user.id,
-      sharedWith: req.body.sharedWith,
+const router = express.Router();
+
+router.post("/notes", auth, async (req, res) => {
+    const note = new NoteSchema({
+        ...req.body,
+        owner: req.user._id,
     });
-    await newNote.save();
-    res.status(201).json({ message: "Note created successfully" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-    console.log(error.message);
-  }
+    try {
+        await note.save();
+        res.status(201).send({ note, message: "Note Saved" });
+    } catch (e) {
+        res.status(500).send(e);
+    }
 });
 
-// Get all notes for the authenticated user
-router.get("/api/notes", async (req, res) => {
-  try {
-    const getNotes = await NoteSchema.find({ owner: req.user.id });
-    res.status(201).send(getNotes);
-  } catch (e) {
-    res.status(400).send(e);
-  }
+router.get("/notes", auth, async (req, res) => {
+    try {
+        // await req.user.populate("notes");
+
+        // res.status(200).send(req.user.notes);
+
+        await req.user.populate("notes");
+
+        console.log(req.user.notes);
+
+        res.send(req.user.notes);
+    } catch (e) {
+        console.log(e);
+        res.status(500).send(e);
+    }
 });
 
-// Get a specific note by ID
-router.get("/api/notes/:id", async (req, res) => {
-  try {
-    const _id = req.params.id;
-    const getNote = await NoteSchema.findById({ _id });
-    res.status(201).send(getNote);
-  } catch (e) {
-    res.status(400).send(e);
-  }
+router.get("/notes/:id", auth, async (req, res) => {
+    try {
+        const note = await NoteSchema.findById({ _id: req.params.id });
+        if (!note) {
+            return res.status(404).send();
+        }
+        res.send(note);
+    } catch (e) {
+        res.status(500).send();
+    }
 });
 
-// Update a note by ID
-router.put("/api/notes/:id", async (req, res) => {
-  try {
-    const _id = req.params.id;
-    const getNote = await NoteSchema.findByIdAndUpdate(_id, req.body);
-    res.send(getNote);
-  } catch (e) {
-    res.status(500).send(e);
-  }
+router.delete("/notes/:id", auth, async (req, res) => {
+    try {
+        const note = await NoteSchema.findOneAndDelete({ _id: req.params.id });
+
+        if (!note) {
+            return res.status(404).send();
+        }
+        res.send({ message: "Note was deleted" });
+    } catch (e) {
+        res.status(500).send();
+    }
 });
 
-// Delete a note by ID
-router.delete("/api/notes/:id", async (req, res) => {
-  try {
-    const getNote = await NoteSchema.findByIdAndDelete(req.params.id);
-    res.send(getNote);
-  } catch (e) {
-    res.status(500).send(e);
-  }
-});
 
 // Share a note with another user for the authenticated user
 router.post("/api/notes/:id/share", async (req, res) => {

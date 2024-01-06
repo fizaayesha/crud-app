@@ -1,79 +1,75 @@
 const express = require("express");
-const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const router = new express.Router();
-const UserSchema = require("../models/Users");
-require("dotenv").config();
 
-// Route for user registration
-router.post("/auth/signup", (req, res, next) => {
-  bcrypt.hash(req.body.password, 10, (err, hash) => {
-    if (err) {
-      return res.status(500).json({ error: err });
-    } else {
-      const user = new UserSchema({
-        _id: new mongoose.Types.ObjectId(),
-        username: req.body.username,
-        password: hash,
-        email: req.body.email,
-      });
-      user
-        .save()
-        .then((result) => {
-          res.status(200).json({
-            new_user: result,
-          });
-        })
-        .catch((err) => {
-          res.status(500).json({
-            error: err,
-          });
-        });
+const User = require("../models/Users.js");
+const auth = require("../middleware.js");
+
+const router = new express.Router();
+
+// Create User
+router.post("/users", async (req, res) => {
+    const user = new User(req.body);
+
+    try {
+        await user.save();
+        const token = await user.generateAuthToken();
+        res.status(201).send({ user, token, message: "New Account Created!" });
+    } catch (e) {
+        console.log(e);
+        if (user.password.length < 8) {
+            res.status(500).send({
+                message: "Password has to be minimum 8 characters",
+            });
+        } else if (e.keyPattern.username === 1) {
+            res.status(500).send({ message: "Username already taken!" });
+        } else {
+            res.status(500).send({ message: "Something went wrong" });
+        }
     }
-  });
 });
 
-// Route for user login
-router.post("/auth/login", async (req, res, next) => {
-  UserSchema.find({ username: req.body.username })
-    .exec()
-    .then((user) => {
-      if (user.length < 1) {
-        return res.status(401).json({
-          msg: "user not exist",
+//Login User
+router.post("/users/login", async (req, res) => {
+    try {
+        const user = await User.findByCredentials(
+            req.body.username,
+            req.body.password
+        );
+        const token = await user.generateAuthToken();
+        res.status(200).send({ user, token });
+    } catch (e) {
+        res.status(500).send({ message: "Unable to login" });
+    }
+});
+
+//Logout User
+router.post("/users/logout", auth, async (req, res) => {
+    try {
+        req.user.tokens = req.user.tokens.filter((token) => {
+            return token.token !== req.token;
         });
-      }
-      bcrypt.compare(req.body.password, user[0].password, (err, result) => {
-        if (!result) {
-          return res.status(401).json({
-            msg: "password matching fail",
-          });
-        }
-        if (result) {
-          const token = jwt.sign(
-            {
-              username: user[0].username,
-              email: user[0].email,
-            },
-            "this is dummy text",
-            {
-              expiresIn: "24h",
-            }
-          );
-          res.status(200).json({
-            username: user[0].username,
-            email: user[0].email,
-            token: token,
-          });
-        }
-      });
-    })
-    .catch((e) => {
-      res.status(500).json({
-        err: err,
-      });
-    });
+        await req.user.save();
+
+        res.send({ message: "Logged Out" });
+    } catch (e) {
+        res.status(500).send(e);
+    }
+});
+
+// Get User Details
+router.get("/users/me", auth, async (req, res) => {
+    res.send(req.user);
+});
+
+//Delete User
+router.delete("/users/delete", auth, async (req, res) => {
+    try {
+        await req.user.remove();
+        res.send({
+            message: "Your account was deleted along with all your data",
+        });
+    } catch (e) {
+        res.status(500).send();
+    }
 });
 
 module.exports = router;
