@@ -62,13 +62,19 @@ router.post("/notes/:id/share", auth, async (req, res) => {
   try {
     const { sharedUserId } = req.body;
 
+    if (req.user.id === sharedUserId) {
+      return res.status(400).json({ message: "Cannot share a note with yourself" });
+    }
+
     const sharedNote = await Note.findOneAndUpdate(
       { _id: req.params.id, owner: req.user.id },
       { $addToSet: { sharedWith: sharedUserId } },
       { new: true }
     );
 
-    if (!sharedNote) return res.status(404).json({ message: "Note not found" });
+    if (!sharedNote) {
+      return res.status(404).json({ message: "Note not found or you are not the owner" });
+    }
 
     res.json({ message: "Note shared successfully" });
   } catch (error) {

@@ -7,7 +7,19 @@ const router = new express.Router();
 
 // Create User
 router.post("/users", async (req, res) => {
-    const user = new User(req.body);
+    const { username, email, password } = req.body;
+
+    if (!email) {
+        return res.status(400).send({ message: "Email is required" });
+    }
+
+    if (password.length < 8) {
+        return res.status(400).send({
+            message: "Password has to be minimum 8 characters",
+        });
+    }
+
+    const user = new User({ username, email, password });
 
     try {
         await user.save();
@@ -15,12 +27,9 @@ router.post("/users", async (req, res) => {
         res.status(201).send({ user, token, message: "New Account Created!" });
     } catch (e) {
         console.log(e);
-        if (user.password.length < 8) {
-            res.status(500).send({
-                message: "Password has to be minimum 8 characters",
-            });
-        } else if (e.keyPattern.username === 1) {
-            res.status(500).send({ message: "Username already taken!" });
+
+        if (e.code === 11000 && e.keyPattern && e.keyPattern.email === 1) {
+            res.status(400).send({ message: "Email already in use" });
         } else {
             res.status(500).send({ message: "Something went wrong" });
         }
