@@ -1,8 +1,8 @@
 const express = require("express");
-require("./db/connect"); // Import the database connection setup
+require("./db/connect.js"); // Import the database connection setup
 // const { setupRateLimiting } = require("./middleware");
-const notesRouter = require("./routers/notesRoute");
-const usersRouter = require("./routers/userRoute");
+const notesRouter = require("./routers/note-routers");
+const usersRouter = require("./routers/user-routers");
 const app = express();
 
 app.use((req, res, next) => {
