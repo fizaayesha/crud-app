@@ -20,10 +20,6 @@ router.post("/notes", auth, async (req, res) => {
 
 router.get("/notes", auth, async (req, res) => {
     try {
-        // await req.user.populate("notes");
-
-        // res.status(200).send(req.user.notes);
-
         await req.user.populate("notes");
 
         console.log(req.user.notes);
